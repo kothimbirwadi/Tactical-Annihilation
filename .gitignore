@@ -1,0 +1,14 @@
+# Binaries and compiled files
+*.exe
+*.o
+*.obj
+*.dll
+*.so
+*.dylib
+combat_specialist.exe
+
+# OS / Editor files
+.vscode/
+.idea/
+*.swp
+Thumbs.db
