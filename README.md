@@ -1,46 +1,50 @@
 # Action Point Zero - Task 3: The Combat Specialist
 
-**Assigned Role:** Member 3: The Combat Specialist (Unit Core, Sniper & Cavalry)
+**Assigned Role:** Member 3: The Combat Specialist (Unit Core, Sniper & Cavalry)  
+**Academic Alignment:** Computer Engineering OOP Syllabus (Units 1 to 6)
 
 ---
 
-## 📌 Requirements Implemented
+## 📌 Mapping Code to OOPs Syllabus Topics
 
-### 1. C++ Backend (`Unit.h`, `Unit.cpp`, `Vector3i.h`)
-- **Base `Unit` Class**:
-  - Encapsulates Operative name, team ID, health (current & max), base damage, attack range, and 3D grid position (`Vector3i`).
-  - **Strict 3 AP Cap**: Each unit cannot spend more than 3 AP per turn (`apSpentThisTurn + cost <= 3`).
-  - **Standard 2-AP Attack**: Checks range, deducts 2 AP from unit, deals base damage, checks friendly fire and target status.
-  - Turn reset function (`resetTurn()`) to reset the 3 AP cap when turn passes.
-
-### 2. Sniper Ultimate: Piercing Shot (`Sniper.h`, `Sniper.cpp`)
-- **High Damage / Long Range / Low HP**: Operative stats tuned according to GDD.
-- **Piercing Shot (3 AP)**:
-  - Line-tracing along the specified 3D grid vector up to `maxDistance` tiles.
-  - Penetrates through every tile, dealing **3x base damage** to all enemies along the bullet path.
-
-### 3. Cavalry Ultimate: Chain Blitz (`Cavalry.h`, `Cavalry.cpp`)
-- **Mobile Striker**: High speed/flanking operative.
-- **Chain Blitz (3 AP)**:
-  - Heavy initial strike dealing **1.5x damage**.
-  - **Recursive Chain Attack Loop**: If the struck target is killed, automatically locates an adjacent living enemy and dashes to strike again.
-  - Recursion limit strictly capped at **3 chains**.
-
-### 4. Godot Frontend Companion (`UnitView.gd`)
-- Reusable 3D Unit scene script (ready to attach Blender `.glb` models).
-- 3D floating health bar with color shifts (Green -> Orange -> Red / KIA).
-- VFX hooks for:
-  - Standard attack animations and recoil.
-  - Sniper Piercing Shot glowing line beam VFX.
-  - Cavalry Chain Blitz rapid dash tweening.
+| Syllabus Unit | Key Concept | Implementation in Code |
+| :--- | :--- | :--- |
+| **Unit 1: Fundamentals of OOP** | Objects, Classes, Encapsulation, Abstraction, Inheritance, Dynamic Binding | Found across `Unit`, `Sniper`, `Cavalry`, and `Vector3i` classes. |
+| **Unit 2: Classes and Objects** | Access Modifiers (`private`, `protected`, `public`) | `Unit.h`, `Vector3i.h` |
+| | The `this` pointer | Explicitly used in `Unit.cpp` (`this->name = unitName;`, `this->position = ...`) |
+| | Static Data Members & Static Methods | `Unit::totalUnitsCreated` and `Unit::getTotalUnitsCreated()` |
+| | Method Overloading (Compile-time Polymorphism) | `Unit::attack(Unit* target)` vs `Unit::attack(Unit* target, int bonusDamage)` |
+| | Dynamic Memory (`new` / `delete`) | `Unit* ghost = new Sniper(...);` and `delete ghost;` in `main.cpp` |
+| | Friend Function & Operator Overloading | Overloaded `operator<<` (friend) and `operator==`, `operator+`, `operator-` in `Vector3i.h` & `Unit.h` |
+| **Unit 3: Constructors & Destructors** | Types of Constructors | Default Constructor, Parameterized Constructor with default arguments, and Copy Constructor in `Unit.h` / `Unit.cpp` |
+| | Virtual Destructor | `virtual ~Unit()` ensures clean polymorphic deallocation when `delete` is called. |
+| **Unit 4: Inheritance & Polymorphism** | Types of Inheritance | Hierarchical Inheritance: `Sniper` and `Cavalry` derive from base class `Unit`. |
+| | Abstract Classes & Interfaces | `Unit` has pure virtual function `virtual void useUltimate(...) = 0;` |
+| | Run-time Polymorphism (Dynamic Binding) | Calling `basePtr->useUltimate(...)` dynamically dispatches to `Sniper` or `Cavalry`. |
+| **Unit 5: File Handling** | `std::ofstream`, `std::ifstream`, File Modes | `CombatLogger.h` records replay logs sequentially to `combat_replay_log.txt` and reads it back. |
+| **Unit 6: Exception Handling & Generics** | Custom Exception Hierarchy, `try-catch`, Multiple Catch Clauses | `CombatExceptions.h`: `OutOfAPException`, `OutOfRangeException`, `InvalidTargetException` caught in `main.cpp`. |
+| | Generic Programming (Templates) | Template method `logMetric<T>(label, value)` in `CombatLogger.h`. |
 
 ---
 
-## 🚀 How to Compile and Run the C++ Demo
+## ⚔️ Game Mechanics Implemented (GDD Task 3)
 
-Open PowerShell in this folder (`e:\Oops Cp`) and run:
+1. **Base Unit Core**:
+   - Manages operative health, base damage, position (`Vector3i`), and alive/dead state.
+   - **Strict 3 AP Unit Cap**: Blocks any action that would cause an operative to spend more than 3 AP in a turn.
+   - **Standard 2-AP Attack**: Validates range, deducts 2 AP, and deals damage to target.
+2. **Sniper Ultimate (Piercing Shot)**:
+   - Costs 3 AP. Traces a straight ray along 3D grid tiles, dealing **3x base damage** to all enemies along the path.
+3. **Cavalry Ultimate (Chain Blitz)**:
+   - Costs 3 AP. Heavy strike dealing **1.5x damage**. If the target is eliminated, automatically runs a **recursive chain-attack loop** against adjacent enemies (capped at 3 chains).
+
+---
+
+## 🚀 How to Compile and Run
+
+Run in PowerShell:
 
 ```powershell
-g++ -std=c++11 -Wall -Wextra Vector3i.h Unit.cpp Sniper.cpp Cavalry.cpp main.cpp -o combat_specialist.exe
+g++ -std=c++11 -Wall -Wextra Vector3i.h CombatExceptions.h CombatLogger.h Unit.cpp Sniper.cpp Cavalry.cpp Infantry.h main.cpp -o combat_specialist.exe
 .\combat_specialist.exe
 ```

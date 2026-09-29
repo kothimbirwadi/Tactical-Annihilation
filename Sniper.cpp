@@ -1,67 +1,64 @@
 #include "Sniper.h"
 #include <iostream>
 
+// [OOP CONCEPT: Constructor Initialization List calling Base Constructor]
 Sniper::Sniper(const std::string& unitName, int team, Vector3i pos)
     // Low Health (70), High Base Damage (35), Extreme Range (6 tiles)
-    : Unit(unitName, team, 70, 35, 6, pos) {}
+    : Unit(unitName, team, 70, 35, 6, pos), piercingRange(5) {}
+
+// [OOP CONCEPT: Run-Time Polymorphism / Dynamic Binding Implementation]
+void Sniper::useUltimate(const std::vector<Unit*>& allUnits, const Vector3i& targetParam) {
+    // targetParam represents firing direction (e.g., (1, 0, 0))
+    Vector3i direction = targetParam;
+    if (direction == Vector3i(0, 0, 0)) {
+        direction = Vector3i(1, 0, 0); // Default direction: forward along X
+    }
+    piercingShot(direction, piercingRange, allUnits);
+}
 
 bool Sniper::piercingShot(Vector3i direction, int maxDistance, const std::vector<Unit*>& allUnits) {
     if (!isAlive()) {
-        std::cout << "[Ultimate Error] " << name << " is down and cannot fire!\n";
-        return false;
+        throw InvalidTargetException(name + " is knocked out and cannot fire ultimate!");
     }
 
-    // Direction must not be zero vector
-    if (direction.x == 0 && direction.y == 0 && direction.z == 0) {
-        std::cout << "[Ultimate Error] Direction vector cannot be zero!\n";
-        return false;
+    if (direction == Vector3i(0, 0, 0)) {
+        throw InvalidTargetException("Sniper shot direction vector cannot be zero (0, 0, 0)!");
     }
 
-    // 1. AP Check: Ultimate costs 3 AP
-    if (!canSpendAP(ULTIMATE_AP_COST)) {
-        return false;
-    }
-
-    // Deduct the 3 AP
+    // Spend 3 AP for ultimate ability (throws OutOfAPException if insufficient AP)
     spendAP(ULTIMATE_AP_COST);
 
     int ultDamage = baseDamage * 3; // 3x Damage multiplier
     std::cout << "\n======================================================\n";
-    std::cout << "[ULTIMATE ACTIVATION] " << name << " casts PIERCING SHOT!\n";
-    std::cout << "  Firing along trajectory ";
-    direction.print();
-    std::cout << " for up to " << maxDistance << " tiles. (Damage: " << ultDamage << ")\n";
+    std::cout << "[ULTIMATE: PIERCING SHOT] " << name << " charges railgun!\n";
+    std::cout << "  Trajectory: " << direction << " | Max Penetration: " 
+              << maxDistance << " tiles | Damage: " << ultDamage << "\n";
     std::cout << "======================================================\n";
 
     int unitsHit = 0;
     Vector3i currentRayPos = position;
 
-    // Line-tracing along the grid
+    // Line-tracing along the 3D grid
     for (int step = 1; step <= maxDistance; ++step) {
         currentRayPos = currentRayPos + direction;
-        std::cout << "  Tracing tile " << step << " at ";
-        currentRayPos.print();
-        std::cout << " ...\n";
+        std::cout << "  Tracing tile " << step << " at " << currentRayPos << " ...\n";
 
-        // Check if any unit is standing on this grid tile
         for (Unit* target : allUnits) {
             if (target && target->isAlive() && target->getPosition() == currentRayPos) {
-                // Enemies (or any unit in path) caught in the high-velocity piercing round
                 if (target->getTeamId() != teamId) {
                     std::cout << "  >>> Direct Hit! Enemy " << target->getName() 
-                              << " pierced at ";
-                    target->getPosition().print();
-                    std::cout << " for 3x damage (" << ultDamage << ")!\n";
+                              << " pierced at " << target->getPosition() 
+                              << " for 3x damage (" << ultDamage << ")!\n";
                     target->takeDamage(ultDamage);
                     unitsHit++;
                 } else {
-                    std::cout << "  >>> Piercing round passed ally " << target->getName() 
-                              << " (Friendly fire protected).\n";
+                    std::cout << "  >>> Bullet bypasses ally " << target->getName() 
+                              << " (Safe from friendly fire).\n";
                 }
             }
         }
     }
 
-    std::cout << "[Piercing Shot Complete] Total enemies struck: " << unitsHit << "\n\n";
+    std::cout << "[Piercing Shot Complete] Enemies pierced: " << unitsHit << "\n\n";
     return true;
 }

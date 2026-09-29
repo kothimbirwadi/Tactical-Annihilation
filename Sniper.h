@@ -4,23 +4,27 @@
 #include "Unit.h"
 #include <vector>
 
-/**
- * @brief Sniper operative: High damage, extreme range, low health.
- * Specializes in long-distance combat and the Piercing Shot ultimate.
- */
+// ============================================================================
+// [OOP CONCEPT: Inheritance (Derived Class)]
+// Sniper inherits from abstract base class Unit.
+// High damage, extreme range, low health.
+// ============================================================================
 class Sniper : public Unit {
+private:
+    int piercingRange;
+
 public:
-    Sniper(const std::string& unitName, int team, Vector3i pos);
+    // [OOP CONCEPT: Constructor in Derived Class with Base Constructor Call]
+    Sniper(const std::string& unitName, int team, Vector3i pos = Vector3i(0, 0, 0));
+
+    // [OOP CONCEPT: Method Overriding (Run-Time Polymorphism)]
+    // Implements pure virtual function from Unit interface
+    virtual void useUltimate(const std::vector<Unit*>& allUnits, const Vector3i& targetParam = Vector3i()) override;
 
     /**
-     * @brief Ultimate: Piercing Shot (Costs 3 AP).
-     * Fires a high-velocity round in a straight line that penetrates through 
-     * multiple grid tiles, dealing 3x base damage to ALL units caught in its path.
-     * 
-     * @param direction Unit vector for firing direction (e.g., (1,0,0), (-1,0,0), (0,0,1))
-     * @param maxDistance Number of tiles the bullet penetrates
-     * @param allUnits List of all units on the battlefield to check for collisions
-     * @return true if successfully fired
+     * @brief Dedicated Piercing Shot function.
+     * Fires a high-velocity round in a straight line that penetrates through
+     * multiple grid tiles, dealing 3x base damage to ALL enemy units in the line.
      */
     bool piercingShot(Vector3i direction, int maxDistance, const std::vector<Unit*>& allUnits);
 };

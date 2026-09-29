@@ -4,151 +4,183 @@
 #include "Unit.h"
 #include "Sniper.h"
 #include "Cavalry.h"
+#include "Infantry.h"
+#include "CombatExceptions.h"
+#include "CombatLogger.h"
+
+// ============================================================================
+// ACTION POINT ZERO - TASK 3: THE COMBAT SPECIALIST
+// Demonstrating Core Combat & Complete OOPs Syllabus Concepts:
+// - Encapsulation, Abstraction, Access Modifiers
+// - Constructors (Default, Parameterized, Copy), Destructors
+// - Static Data Members & Static Methods
+// - 'this' pointer, Friend Functions, Operator Overloading
+// - Inheritance (Hierarchical) & Abstract Base Class
+// - Polymorphism: Compile-Time (Overloading) & Run-Time (Virtual Functions)
+// - Dynamic Memory Allocation ('new' and 'delete')
+// - Exception Handling (try, catch, multiple catch clauses, custom exceptions)
+// - File Handling (ofstream, ifstream)
+// - Generic Programming (Templates)
+// ============================================================================
 
 int main() {
     std::cout << "========================================================\n";
-    std::cout << "  ACTION POINT ZERO - TASK 3: CORE COMBAT DEMO\n";
-    std::cout << "  Role: The Combat Specialist (Unit Core, Sniper & Cavalry)\n";
+    std::cout << "   ACTION POINT ZERO - TASK 3: CORE COMBAT SYSTEM\n";
+    std::cout << "   Role: The Combat Specialist (Unit Core, Sniper & Cavalry)\n";
     std::cout << "========================================================\n\n";
 
     // ------------------------------------------------------------------------
-    // SETUP: Create Squads for Team Alpha (Team 1) and Team Bravo (Team 2)
+    // [OOP CONCEPT: File Handling & Generic Programming Initialization]
     // ------------------------------------------------------------------------
-    Sniper sniperAlpha("Ghost (Sniper)", 1, Vector3i(0, 0, 0));
-    Cavalry cavalryAlpha("Vanguard (Cavalry)", 1, Vector3i(1, 0, 1));
+    CombatLogger logger("combat_replay_log.txt");
+    logger.logEvent("Match started between Team Alpha (Player 1) and Team Bravo (Player 2).");
 
-    // Enemy units (Team 2)
-    Unit enemySoldier1("Enemy Grunt A", 2, 40, 15, 2, Vector3i(1, 0, 2));
-    Unit enemySoldier2("Enemy Grunt B", 2, 40, 15, 2, Vector3i(2, 0, 2));
-    Unit enemySoldier3("Enemy Grunt C", 2, 50, 15, 2, Vector3i(3, 0, 2));
-    Unit distantEnemy("Enemy Scout", 2, 80, 20, 2, Vector3i(8, 0, 8)); // Far away
+    // ------------------------------------------------------------------------
+    // [OOP CONCEPT: Dynamic Memory Allocation ('new') & Base Class Pointers]
+    // ------------------------------------------------------------------------
+    std::cout << ">>> [DEMO 1] Object Creation & Dynamic Memory Allocation ('new'):\n";
 
-    std::vector<Unit*> battlefieldUnits = {
-        &sniperAlpha,
-        &cavalryAlpha,
-        &enemySoldier1,
-        &enemySoldier2,
-        &enemySoldier3,
-        &distantEnemy
-    };
+    // Team 1: Combat Specialist Squad
+    Unit* ghostSniper = new Sniper("Ghost", 1, Vector3i(0, 0, 0));
+    Unit* vanguardCavalry = new Cavalry("Vanguard", 1, Vector3i(1, 0, 1));
 
-    std::cout << "--- Initial Battlefield Status ---\n";
-    for (const auto* unit : battlefieldUnits) {
-        unit->displayStatus();
-    }
+    // Team 2: Target Squad (Infantry)
+    Unit* enemyAlpha = new Infantry("Enemy Grunt A", 2, 40, 15, Vector3i(1, 0, 2));
+    Unit* enemyBravo = new Infantry("Enemy Grunt B", 2, 40, 15, Vector3i(2, 0, 2));
+    Unit* enemyScout = new Infantry("Enemy Scout", 2, 80, 20, Vector3i(8, 0, 8)); // Out of range
+
+    // [OOP CONCEPT: Static Member Function & Data Member]
+    std::cout << "\n>>> [DEMO 2] Static Member Functions & Data Members:\n";
+    std::cout << "  Total units active on battlefield: " << Unit::getTotalUnitsCreated() << "\n\n";
+    logger.logMetric("Total Active Units", Unit::getTotalUnitsCreated());
+
+    // ------------------------------------------------------------------------
+    // [OOP CONCEPT: Copy Constructor Demonstration]
+    // ------------------------------------------------------------------------
+    std::cout << ">>> [DEMO 3] Copy Constructor (Deep Copy):\n";
+    Infantry originalDummy("Training Dummy", 2, 50, 0, Vector3i(0, 0, 5));
+    Infantry clonedDummy = originalDummy; // Invokes Copy Constructor
+    std::cout << "  Original: " << originalDummy << "\n";
+    std::cout << "  Clone:    " << clonedDummy << "\n\n";
+
+    // ------------------------------------------------------------------------
+    // [OOP CONCEPT: Compile-Time Polymorphism (Method Overloading)]
+    // ------------------------------------------------------------------------
+    std::cout << ">>> [DEMO 4] Compile-Time Polymorphism (Method Overloading):\n";
+    std::cout << "  1. Calling attack(target):\n";
+    vanguardCavalry->attack(enemyAlpha); // Standard 2-AP attack
+    std::cout << "  2. Calling overloaded attack(target, bonusDamage):\n";
+    vanguardCavalry->resetTurn();
+    vanguardCavalry->attack(enemyAlpha, 5); // Overloaded with bonus damage
     std::cout << "\n";
 
     // ------------------------------------------------------------------------
-    // TEST 1: Standard 2-AP Attack & Range Checking
+    // [OOP CONCEPT: Exception Handling (try-catch with Multiple Clauses)]
     // ------------------------------------------------------------------------
-    std::cout << "========================================================\n";
-    std::cout << "TEST 1: Standard 2-AP Attack & Range Validation\n";
-    std::cout << "========================================================\n";
+    std::cout << ">>> [DEMO 5] Exception Handling (Range & 3-AP Cap Enforcement):\n";
 
-    // Cavalry tries to attack distant enemy (Out of range check)
-    std::cout << "\n[Step 1A] Cavalry tries to attack distant enemy at (8, 0, 8):\n";
-    cavalryAlpha.standardAttack(&distantEnemy);
+    // Reset turn for clean exception demonstrations
+    vanguardCavalry->resetTurn();
 
-    // Cavalry attacks adjacent enemy (In range check)
-    std::cout << "\n[Step 1B] Cavalry performs valid standard attack on adjacent Enemy Grunt A:\n";
-    cavalryAlpha.standardAttack(&enemySoldier1);
-
-    // ------------------------------------------------------------------------
-    // TEST 2: Strict 3-AP Per Turn Unit Cap
-    // ------------------------------------------------------------------------
-    std::cout << "\n========================================================\n";
-    std::cout << "TEST 2: Strict 3-AP Per Unit Per Turn Cap Enforcement\n";
-    std::cout << "========================================================\n";
-    std::cout << "Cavalry has already used " << cavalryAlpha.getApSpentThisTurn() 
-              << "/3 AP this turn.\n";
-    std::cout << "Attempting another 2-AP Standard Attack in the same turn (Total would be 4 AP):\n";
-    bool success = cavalryAlpha.standardAttack(&enemySoldier1);
-    if (!success) {
-        std::cout << ">> VERIFIED: Individual 3-AP limit correctly blocked the action!\n";
+    // Test A: OutOfRangeException
+    try {
+        std::cout << "  Test A: Attempting to attack distant enemy at (8, 0, 8) with range 1:\n";
+        vanguardCavalry->attack(enemyScout);
+    } catch (const OutOfRangeException& ex) {
+        std::cout << "  [CAUGHT EXPECTED EXCEPTION]: " << ex.what() << "\n";
+        logger.logEvent(ex.what());
+    } catch (const OutOfAPException& ex) {
+        std::cout << "  [CAUGHT AP EXCEPTION]: " << ex.what() << "\n";
+    } catch (const CombatException& ex) {
+        std::cout << "  [CAUGHT GENERAL COMBAT EXCEPTION]: " << ex.what() << "\n";
     }
 
-    // Reset turns for next tests
-    std::cout << "\n--- Ending Turn: Resetting Unit AP pools ---\n";
-    for (auto* unit : battlefieldUnits) {
-        unit->resetTurn();
+    // Test B: OutOfAPException (Exceeding 3 AP per unit per turn)
+    try {
+        std::cout << "\n  Test B: Performing 1st valid attack on Enemy Grunt B (costs 2 AP):\n";
+        vanguardCavalry->attack(enemyBravo); // Uses 2 AP (2/3 AP used)
+
+        std::cout << "  Attempting 2nd attack on Enemy Grunt B in same turn (would require 4/3 AP):\n";
+        vanguardCavalry->attack(enemyBravo); // Fails AP check
+    } catch (const OutOfAPException& ex) {
+        std::cout << "  [CAUGHT EXPECTED EXCEPTION]: " << ex.what() << "\n";
+        logger.logEvent(ex.what());
+    } catch (const OutOfRangeException& ex) {
+        std::cout << "  [CAUGHT RANGE EXCEPTION]: " << ex.what() << "\n";
+    } catch (const CombatException& ex) {
+        std::cout << "  [CAUGHT GENERAL COMBAT EXCEPTION]: " << ex.what() << "\n";
     }
 
-    // ------------------------------------------------------------------------
-    // TEST 3: Sniper Ultimate - Piercing Shot (Line Tracing & 3x Damage)
-    // ------------------------------------------------------------------------
-    std::cout << "\n========================================================\n";
-    std::cout << "TEST 3: Sniper Piercing Shot (Grid Line Tracing & 3x Dmg)\n";
-    std::cout << "========================================================\n";
-    
-    // Line up targets in a straight row along X axis from (1,0,0) to (3,0,0)
-    Unit lineTarget1("Enemy Sentry 1", 2, 100, 10, 1, Vector3i(1, 0, 0));
-    Unit lineTarget2("Enemy Sentry 2", 2, 120, 10, 1, Vector3i(2, 0, 0));
-    Unit lineTarget3("Enemy Sentry 3", 2, 110, 10, 1, Vector3i(3, 0, 0));
+    // Reset turn AP for next phase
+    vanguardCavalry->resetTurn();
+    ghostSniper->resetTurn();
 
-    std::vector<Unit*> sniperLineBattlefield = {
-        &sniperAlpha,
-        &lineTarget1,
-        &lineTarget2,
-        &lineTarget3
+    // ------------------------------------------------------------------------
+    // [TASK 3 REQUIREMENT & OOP CONCEPT: Run-Time Polymorphism (Virtual Functions)]
+    // Sniper Ultimate: Piercing Shot (Grid Line Tracing for 3x Damage)
+    // ------------------------------------------------------------------------
+    std::cout << "\n>>> [DEMO 6] Sniper Piercing Shot (Run-Time Polymorphism & Line-Tracing):\n";
+
+    Unit* lineTarget1 = new Infantry("Line Sentry 1", 2, 100, 10, Vector3i(1, 0, 0));
+    Unit* lineTarget2 = new Infantry("Line Sentry 2", 2, 120, 10, Vector3i(2, 0, 0));
+    Unit* lineTarget3 = new Infantry("Line Sentry 3", 2, 110, 10, Vector3i(3, 0, 0));
+
+    std::vector<Unit*> battlefieldUnits = {
+        ghostSniper,
+        vanguardCavalry,
+        lineTarget1,
+        lineTarget2,
+        lineTarget3,
+        enemyAlpha,
+        enemyBravo,
+        enemyScout
     };
 
-    std::cout << "Targets lined up along the X-axis:\n";
-    lineTarget1.displayStatus();
-    lineTarget2.displayStatus();
-    lineTarget3.displayStatus();
-
-    // Sniper is at (0, 0, 0). Fires along direction (+1, 0, 0)
-    std::cout << "\nSniper Ghost fires Piercing Shot along (+1, 0, 0):\n";
-    sniperAlpha.piercingShot(Vector3i(1, 0, 0), 4, sniperLineBattlefield);
-
-    std::cout << "Status of targets after Piercing Shot:\n";
-    lineTarget1.displayStatus();
-    lineTarget2.displayStatus();
-    lineTarget3.displayStatus();
+    // Demonstrating Dynamic Binding via Base Class Pointer (Unit*)
+    Unit* basePolymorphicPointer = ghostSniper;
+    // Calls Sniper::useUltimate via dynamic dispatch
+    basePolymorphicPointer->useUltimate(battlefieldUnits, Vector3i(1, 0, 0));
+    logger.logEvent("Ghost (Sniper) fired Piercing Shot along trajectory (1, 0, 0).");
 
     // ------------------------------------------------------------------------
-    // TEST 4: Cavalry Ultimate - Chain Blitz (Recursive Chain On Kill, Max 3)
+    // [TASK 3 REQUIREMENT: Cavalry Chain Blitz (Recursive Kill Chain, Max 3)]
     // ------------------------------------------------------------------------
-    std::cout << "\n========================================================\n";
-    std::cout << "TEST 4: Cavalry Chain Blitz (Recursive Chain Kill Loop)\n";
-    std::cout << "========================================================\n";
+    std::cout << "\n>>> [DEMO 7] Cavalry Chain Blitz (Recursive Chain-Attack on Kill):\n";
 
-    // Position 3 low-HP enemy units in adjacent clusters
-    // Cavalry starts at (0, 0, 0)
-    // Target 1 at (1, 0, 0)  [adjacent to (0,0,0)]
-    // Target 2 at (2, 0, 0)  [adjacent to (1,0,0)]
-    // Target 3 at (2, 0, 1)  [adjacent to (2,0,0)]
-    cavalryAlpha.setPosition(Vector3i(0, 0, 0));
-    cavalryAlpha.resetTurn();
+    // Reposition Cavalry and arrange clustered low-HP enemies
+    vanguardCavalry->setPosition(Vector3i(0, 0, 0));
+    vanguardCavalry->resetTurn();
 
-    Unit chainTarget1("Cluster Enemy 1", 2, 35, 10, 1, Vector3i(1, 0, 0));
-    Unit chainTarget2("Cluster Enemy 2", 2, 40, 10, 1, Vector3i(2, 0, 0));
-    Unit chainTarget3("Cluster Enemy 3", 2, 45, 10, 1, Vector3i(2, 0, 1));
-    Unit chainTarget4("Cluster Enemy 4", 2, 30, 10, 1, Vector3i(2, 0, 2)); // 4th enemy to test max 3 cap
+    Unit* chain1 = new Infantry("Chain Grunt 1", 2, 35, 10, Vector3i(1, 0, 0)); // Adjacent to (0,0,0)
+    Unit* chain2 = new Infantry("Chain Grunt 2", 2, 40, 10, Vector3i(2, 0, 0)); // Adjacent to (1,0,0)
+    Unit* chain3 = new Infantry("Chain Grunt 3", 2, 45, 10, Vector3i(2, 0, 1)); // Adjacent to (2,0,0)
+    Unit* chain4 = new Infantry("Chain Grunt 4", 2, 30, 10, Vector3i(2, 0, 2)); // 4th target (testing max 3 limit)
 
-    std::vector<Unit*> chainBattlefield = {
-        &cavalryAlpha,
-        &chainTarget1,
-        &chainTarget2,
-        &chainTarget3,
-        &chainTarget4
-    };
+    battlefieldUnits.push_back(chain1);
+    battlefieldUnits.push_back(chain2);
+    battlefieldUnits.push_back(chain3);
+    battlefieldUnits.push_back(chain4);
 
-    std::cout << "Cavalry Base Damage is " << cavalryAlpha.getBaseDamage() 
-              << ". Chain Blitz 1.5x damage = " 
-              << static_cast<int>(cavalryAlpha.getBaseDamage() * 1.5f) << " damage per strike.\n";
-    std::cout << "Triggering Chain Blitz on initial target Cluster Enemy 1:\n";
+    // Dynamic Binding calling Cavalry::useUltimate
+    Unit* cavalryPointer = vanguardCavalry;
+    cavalryPointer->useUltimate(battlefieldUnits);
+    logger.logEvent("Vanguard (Cavalry) executed Chain Blitz.");
 
-    cavalryAlpha.chainBlitz(&chainTarget1, chainBattlefield);
+    // ------------------------------------------------------------------------
+    // [OOP CONCEPT: File Stream Verification (Reading back combat log)]
+    // ------------------------------------------------------------------------
+    logger.displayLogSummary();
 
-    std::cout << "Status of cluster enemies after Chain Blitz:\n";
-    chainTarget1.displayStatus();
-    chainTarget2.displayStatus();
-    chainTarget3.displayStatus();
-    chainTarget4.displayStatus();
+    // ------------------------------------------------------------------------
+    // [OOP CONCEPT: Memory Recovery ('delete') & Virtual Destructors]
+    // ------------------------------------------------------------------------
+    std::cout << "\n>>> [DEMO 8] Memory Recovery ('delete') via Virtual Destructors:\n";
+    for (Unit* u : battlefieldUnits) {
+        delete u; // Correctly calls derived destructor, then base destructor
+    }
 
     std::cout << "\n========================================================\n";
-    std::cout << "  ALL COMBAT SPECIALIST (ROLE 3) TESTS COMPLETED!\n";
+    std::cout << "  ALL OOPS SYLLABUS TOPICS & TASK 3 VERIFIED SUCCESSFULLY!\n";
     std::cout << "========================================================\n";
 
     return 0;

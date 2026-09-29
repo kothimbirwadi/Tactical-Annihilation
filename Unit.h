@@ -5,31 +5,64 @@
 #include <vector>
 #include <iostream>
 #include "Vector3i.h"
+#include "CombatExceptions.h"
 
-/**
- * @brief Base class for all operatives in Action Point Zero.
- * Member 3 (The Combat Specialist): Unit Core & Combat Foundation.
- */
+// [OOP CONCEPT: Forward Declaration]
+class Unit;
+
+// ============================================================================
+// [OOP CONCEPT: Abstract Base Class & Interface]
+// Serves as the foundation for all operatives in Action Point Zero.
+// Member 3: The Combat Specialist (Unit Core, Sniper & Cavalry)
+// ============================================================================
 class Unit {
+private:
+    // [OOP CONCEPT: Encapsulation & Data Hiding (Private Member)]
+    int unitId;
+
 protected:
+    // [OOP CONCEPT: Protected Visibility for Inheritance]
     std::string name;
-    int teamId;         // 1 for Team Alpha, 2 for Team Bravo
+    int teamId;          // 1 = Team Alpha, 2 = Team Bravo
     int maxHealth;
     int currentHealth;
     int baseDamage;
-    int attackRange;    // Range for standard attacks in grid tiles
+    int attackRange;     // Max distance in grid tiles
     Vector3i position;
     int apSpentThisTurn;
 
+    // [OOP CONCEPT: Static Data Member]
+    static int totalUnitsCreated;
+
 public:
-    static const int MAX_AP_PER_TURN = 3;       // Strict rule: no unit can spend > 3 AP/turn
+    // Game Rules Constants
+    static const int MAX_AP_PER_TURN = 3;        // Strict 3-AP per unit turn cap
     static const int STANDARD_ATTACK_AP_COST = 2;// Standard attack costs 2 AP
-    static const int ULTIMATE_AP_COST = 3;      // Ultimate abilities cost 3 AP
+    static const int ULTIMATE_AP_COST = 3;       // Ultimate abilities cost 3 AP
 
-    Unit(const std::string& unitName, int team, int hp, int dmg, int range, Vector3i pos);
-    virtual ~Unit() = default;
+    // ========================================================================
+    // [OOP CONCEPT: Constructors & Destructors]
+    // ========================================================================
+    // 1. Default Constructor
+    Unit();
 
-    // --- Core Getters & State ---
+    // 2. Parameterized Constructor with Default Arguments
+    Unit(const std::string& unitName, int team, int hp, int dmg, int range, Vector3i pos = Vector3i(0, 0, 0));
+
+    // 3. Copy Constructor (Deep Copy)
+    Unit(const Unit& other);
+
+    // 4. Virtual Destructor (Ensures safe cleanup of derived class objects)
+    virtual ~Unit();
+
+    // ========================================================================
+    // [OOP CONCEPT: Static Member Function]
+    // ========================================================================
+    static int getTotalUnitsCreated();
+
+    // ========================================================================
+    // Core Getters & State (Encapsulation)
+    // ========================================================================
     std::string getName() const { return name; }
     int getTeamId() const { return teamId; }
     int getCurrentHealth() const { return currentHealth; }
@@ -43,27 +76,40 @@ public:
 
     void setPosition(const Vector3i& newPos) { position = newPos; }
 
-    // --- AP Management ---
+    // ========================================================================
+    // AP Management System
+    // ========================================================================
     bool canSpendAP(int amount) const;
-    bool spendAP(int amount);
-    void resetTurn(); // Called at start of player's turn to reset AP cap
+    void spendAP(int amount); // Throws OutOfAPException if limit exceeded
+    void resetTurn();         // Resets AP cap at beginning of turn
 
-    // --- Health & Damage Handling ---
-    // Returns true if the damage was fatal
-    bool takeDamage(int amount);
+    // ========================================================================
+    // Health & Combat Mechanics
+    // ========================================================================
+    bool takeDamage(int amount); // Returns true if fatal
     void heal(int amount);
 
-    // --- Standard Combat (2 AP) ---
-    // Checks range, deducts 2 AP, deals baseDamage to enemy
-    virtual bool standardAttack(Unit* target);
+    // ========================================================================
+    // [OOP CONCEPT: Compile-Time Polymorphism (Method Overloading)]
+    // ========================================================================
+    // Standard 2-AP attack (checks AP and range, throws exceptions on errors)
+    virtual bool attack(Unit* target);
 
-    // Virtual hook for Ultimate (implemented in derived classes)
-    virtual bool useUltimate(const std::vector<Unit*>& /*allUnits*/, const Vector3i& /*targetParam*/) {
-        std::cout << name << " has no default ultimate action.\n";
-        return false;
-    }
+    // Overloaded attack with additional bonus damage modifier
+    virtual bool attack(Unit* target, int bonusDamage);
+
+    // ========================================================================
+    // [OOP CONCEPT: Run-Time Polymorphism (Pure Virtual Function)]
+    // Makes Unit an Abstract Class. Derived classes (Sniper, Cavalry) MUST implement it.
+    // ========================================================================
+    virtual void useUltimate(const std::vector<Unit*>& allUnits, const Vector3i& targetParam = Vector3i()) = 0;
 
     virtual void displayStatus() const;
+
+    // ========================================================================
+    // [OOP CONCEPT: Friend Function for Stream Output]
+    // ========================================================================
+    friend std::ostream& operator<<(std::ostream& os, const Unit& unit);
 };
 
 #endif // UNIT_H
